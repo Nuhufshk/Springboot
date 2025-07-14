@@ -36,9 +36,9 @@ public class UserController {
             return ResponseEntity.badRequest().body(new RegisterResponse<>(false, errorMsg, null));
         }
         
-        // Check if phone number already exists
+        // Check if email already exists
         if (service.existsByEmail(user.getEmail())) {
-            return ResponseEntity.badRequest().body(new RegisterResponse<>(false, "Phone number already exists", null));
+            return ResponseEntity.badRequest().body(new RegisterResponse<>(false, "Email already exists", null));
         }
 
         // Register the user
@@ -63,16 +63,17 @@ public class UserController {
             return ResponseEntity.badRequest().body(new RegisterResponse<>(false, errorMsg, null));
         }
         
-        // Check if phone number already exists
+        // Check if email exists
         if (!service.existsByEmail(user.getEmail())) {
-            return ResponseEntity.badRequest().body(new RegisterResponse<>(false, "Phone number doesn't exists", null));
+            return ResponseEntity.badRequest().body(new RegisterResponse<>(false, "Email doesn't exist", null));
         }
 
-        if(service.verify(user) == null || "fail".equals(service.verify(user))) {
-            return ResponseEntity.badRequest().body(new RegisterResponse<>(false, "Check your password",  new JwtDTO(service.verify(user))) );
-        }
-
+        // Call verify only once
         String validity = service.verify(user);
+        if (validity == null || "fail".equals(validity)) {
+            return ResponseEntity.badRequest().body(new RegisterResponse<>(false, "Check your password", null));
+        }
+
         return ResponseEntity.ok(new RegisterResponse<>(true, "User authenticated successfully", new JwtDTO(validity)));//returns a jwt
     }
 
@@ -87,9 +88,9 @@ public class UserController {
             return ResponseEntity.badRequest().body(new RegisterResponse<>(false, errorMsg, null));
         }
         
-        // Check if phone number exists
+        // Check if email exists
         if (!service.existsByEmail(user.getEmail())) {
-            return ResponseEntity.badRequest().body(new RegisterResponse<>(false, "Phone number doesn't exists", null));
+            return ResponseEntity.badRequest().body(new RegisterResponse<>(false, "Email doesn't exist", null));
         }
 
         String resetStatus = service.resetPassword(user);
@@ -107,7 +108,7 @@ public class UserController {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
 
-            // remove thr token from the cache
+            // remove the token from the cache
             service.removeTokenFromCache(token);
 
             return ResponseEntity.ok(new RegisterResponse<>(true, "User logged out successfully", "Logout successful"));
