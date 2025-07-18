@@ -74,7 +74,7 @@ public class UserService {
                 }
             
         } catch (AuthenticationException e) {
-            return "fail"; // Error occurred while checking user
+            return null; // Error occurred while checking user
         }
     }
 
@@ -131,9 +131,8 @@ public class UserService {
     }
 
     public Users getUserById(){
-        Users user;
         try {
-            user = repo.findById(getCurrentUser());
+            Users user = repo.findById(getCurrentUser()).orElse(null);
 
             if (user == null) {
                 return null; 

@@ -36,7 +36,7 @@ public class SecurityConfig {
                 authorizeHttpRequests(request -> request
                         .requestMatchers("/login", "/register","reset-password").permitAll()
                         .anyRequest().authenticated()).
-                httpBasic(Customizer.withDefaults()).  
+                  
                 sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();

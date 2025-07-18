@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 
-public interface IdeohubBoardRepository extends MongoRepository<IdeohubBoard, Long> {
+public interface IdeohubBoardRepository extends MongoRepository<IdeohubBoard, String> {
 }

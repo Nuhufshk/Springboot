@@ -33,18 +33,18 @@ public class IdeohubBoardController {
     }
 
     @GetMapping("/{id}")
-    public IdeohubBoard getBoardById(@PathVariable Long id) {
+    public IdeohubBoard getBoardById(@PathVariable String id) {
         return IdeohubBoardRepository.findById(id).orElse(null);
     }
 
     @PutMapping("/{id}")
-    public IdeohubBoard updateBoard(@PathVariable Long id, @RequestBody IdeohubBoard board) {
+    public IdeohubBoard updateBoard(@PathVariable String id, @RequestBody IdeohubBoard board) {
         board.setId(id);
         return IdeohubBoardRepository.save(board);
     }
 
     @DeleteMapping("/{id}")
-    public void deleteBoard(@PathVariable Long id) {
+    public void deleteBoard(@PathVariable String id) {
         IdeohubBoardRepository.deleteById(id);
     }
 }

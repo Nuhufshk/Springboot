@@ -25,71 +25,69 @@ public class UserController {
     @Autowired
     private UserService service;
 
-
     @PostMapping("/register")
     public ResponseEntity<RegisterResponse<Users>> register(@Valid @RequestBody LoginDTO user,
             BindingResult bindingResult) {
 
         // Validate the user input
-          if (bindingResult.hasErrors()) {
+        if (bindingResult.hasErrors()) {
             String errorMsg = bindingResult.getAllErrors().get(0).getDefaultMessage();
             return ResponseEntity.badRequest().body(new RegisterResponse<>(false, errorMsg, null));
         }
-        
+
         // Check if phone number already exists
         if (service.existsByEmail(user.getEmail())) {
-            return ResponseEntity.badRequest().body(new RegisterResponse<>(false, "Phone number already exists", null));
+            return ResponseEntity.badRequest().body(new RegisterResponse<>(false, "Email already exists", null));
         }
 
         // Register the user
         Users registeredUser = service.register(user);
 
-        if(registeredUser == null) {
+        if (registeredUser == null) {
             return ResponseEntity.badRequest().body(new RegisterResponse<>(false, "An internal error occured", null));
 
         }
         return ResponseEntity.ok(new RegisterResponse<>(true, "User registered successfully", registeredUser));
     }
 
-
-
     @PostMapping("/login")
     public ResponseEntity<RegisterResponse<JwtDTO>> login(@Valid @RequestBody LoginDTO user,
             BindingResult bindingResult) {
-        
+
         // Validate the user input
-          if (bindingResult.hasErrors()) {
+        if (bindingResult.hasErrors()) {
             String errorMsg = bindingResult.getAllErrors().get(0).getDefaultMessage();
             return ResponseEntity.badRequest().body(new RegisterResponse<>(false, errorMsg, null));
         }
-        
-        // Check if phone number already exists
-        if (!service.existsByEmail(user.getEmail())) {
-            return ResponseEntity.badRequest().body(new RegisterResponse<>(false, "Phone number doesn't exists", null));
-        }
 
-        if(service.verify(user) == null || "fail".equals(service.verify(user))) {
-            return ResponseEntity.badRequest().body(new RegisterResponse<>(false, "Check your password",  new JwtDTO(service.verify(user))) );
+        // Check if email already exists
+        if (!service.existsByEmail(user.getEmail())) {
+            return ResponseEntity.badRequest().body(new RegisterResponse<>(false, "Email doesn't exists", null));
         }
 
         String validity = service.verify(user);
-        return ResponseEntity.ok(new RegisterResponse<>(true, "User authenticated successfully", new JwtDTO(validity)));//returns a jwt
+        if (validity == null || "fail".equals(validity)) {
+            return ResponseEntity.badRequest()
+                    .body(new RegisterResponse<>(false, "Check your password", new JwtDTO(validity)));
+        }
+        return ResponseEntity.ok(new RegisterResponse<>(true, "User authenticated successfully", new JwtDTO(validity)));// returns
+                                                                                                                        // a
+                                                                                                                        // jwt
     }
-
 
     @PostMapping("/reset-password")
     public ResponseEntity<RegisterResponse<String>> resetPassword(@Valid @RequestBody LoginDTO user,
             BindingResult bindingResult) {
-        
+
         // Validate the user input
-          if (bindingResult.hasErrors()) {
+        if (bindingResult.hasErrors()) {
             String errorMsg = bindingResult.getAllErrors().get(0).getDefaultMessage();
             return ResponseEntity.badRequest().body(new RegisterResponse<>(false, errorMsg, null));
         }
-        
-        // Check if phone number exists
+
+        // Check if email exists
         if (!service.existsByEmail(user.getEmail())) {
-            return ResponseEntity.badRequest().body(new RegisterResponse<>(false, "Phone number doesn't exists", null));
+            return ResponseEntity.badRequest().body(new RegisterResponse<>(false, "Email doesn't exists", null));
         }
 
         String resetStatus = service.resetPassword(user);
@@ -115,6 +113,5 @@ public class UserController {
 
         return ResponseEntity.badRequest().body(new RegisterResponse<>(false, "No token provided", null));
     }
-
 
 }

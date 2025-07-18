@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 public class UserCollection {
     @Id
     private String id;
-    private String Username;
+    private String username;
     private String email;
     private String password;
 

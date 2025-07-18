@@ -6,7 +6,6 @@ import org.springframework.stereotype.Repository;
 import com.group18.ideohub.model.Users;
 
 @Repository
-public interface UserRepo extends MongoRepository<Users, Integer> {
+public interface UserRepo extends MongoRepository<Users, String> {
     Users findByEmail(String email);
-    Users findById(String id);
 }
