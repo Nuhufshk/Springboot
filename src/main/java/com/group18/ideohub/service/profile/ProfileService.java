@@ -10,6 +10,7 @@ import com.group18.ideohub.model.profile.ProfileModel;
 import com.group18.ideohub.repo.UserRepo;
 import com.group18.ideohub.repo.profile.ProfileRepo;
 import com.group18.ideohub.service.UserService;
+import com.group18.ideohub.service.cloudinary.CloudinaryService;
 
 @Service
 public class ProfileService {
@@ -19,6 +20,8 @@ public class ProfileService {
     private UserService userService;
 
     private UserRepo userRepo;
+
+    private CloudinaryService cloudinaryservice;
 
     public ProfileDTO getProfile() {
         ProfileModel profileModel = profileRepo.findByUserId(userService.getCurrentUser());
@@ -68,7 +71,7 @@ public class ProfileService {
 
         // Handle profile picture upload logic here
         if (profilePicture != null && !profilePicture.isEmpty()) {
-            String pictureUrl = "my profile picture url";
+            String pictureUrl = cloudinaryservice.uploadAndReturnUrl(profilePicture);
             profileModel.setProfilePictureUrl(pictureUrl);
         }
 
