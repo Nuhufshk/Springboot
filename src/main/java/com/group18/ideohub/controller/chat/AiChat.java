@@ -12,7 +12,9 @@ import com.group18.ideohub.response.chat.ChatResponse;
 import com.group18.ideohub.service.chat.ChatService;
 
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
+@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/api/chat")
 public class AiChat {
@@ -24,7 +26,8 @@ public class AiChat {
     @GetMapping("/messages")
     public ResponseEntity<ChatResponse<?>> getAllMessages() {
         try {
-            return ResponseEntity.ok(new ChatResponse<>(true, "Successfully retrieved messages", null));
+            return ResponseEntity
+                    .ok(new ChatResponse<>(true, "Successfully retrieved messages", chatService.getAllMessages()));
         } catch (Exception e) {
             return ResponseEntity
                     .badRequest()
@@ -36,8 +39,7 @@ public class AiChat {
     @PostMapping("/messages")
     public ResponseEntity<ChatResponse<?>> sendMessage(@RequestBody ChatRequest chatRequest) {
         try {
-            String userPrompt = chatRequest.getMessage();
-            String aiResponse = chatService.getAiResponse(userPrompt);
+            String aiResponse = chatService.processChatMessage(chatRequest.getMessage());
             return ResponseEntity.ok(new ChatResponse<>(true, "Successfully sent message", aiResponse));
         } catch (Exception e) {
             return ResponseEntity
