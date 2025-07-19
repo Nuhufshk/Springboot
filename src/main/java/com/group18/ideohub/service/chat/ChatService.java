@@ -1,16 +1,20 @@
-package com.group18.ideohub.controller.chat;
+package com.group18.ideohub.service.chat;
 
-import org.springframework.ai.chat.ChatClient;
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 
+@Service
 public class ChatService {
     private final ChatClient chatClient;
 
-    public ChatService(ChatClient chatClient) {
-        this.chatClient = chatClient;
+    public ChatService(ChatClient.Builder chatClientBuilder) {
+        this.chatClient = chatClientBuilder.build();
     }
 
     public String getAiResponse(String userPrompt) {
-        return chatClient.call(userPrompt);
+        return chatClient.prompt()
+                .user(userPrompt)
+                .call()
+                .content();
     }
 }

@@ -11,7 +11,7 @@ import com.group18.ideohub.response.chat.ChatRequest;
 import com.group18.ideohub.response.chat.ChatResponse;
 import com.group18.ideohub.service.chat.ChatService;
 
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
 @RequestMapping("/api/chat")

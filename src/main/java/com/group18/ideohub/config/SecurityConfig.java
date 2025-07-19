@@ -34,7 +34,7 @@ public class SecurityConfig {
         return http.csrf(customizer -> customizer.disable()).
                 cors(Customizer.withDefaults()).
                 authorizeHttpRequests(request -> request
-                        .requestMatchers("/login", "/register","reset-password").permitAll()
+                        .requestMatchers("/login", "/register","reset-password", "/api/chat/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .anyRequest().authenticated()).
                   
                 sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
