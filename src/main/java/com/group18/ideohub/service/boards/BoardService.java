@@ -29,7 +29,17 @@ public class BoardService {
 
     public List<BoardsModel> getAllBoards() {
         String userId = userService.getCurrentUser();
-        return repository.findByUserId(userId);
+        List<BoardsModel> userBoards = repository.findByUserId(userId);
+        List<BoardsModel> accessibleBoards = new java.util.ArrayList<>(userBoards);
+
+        List<BoardsModel> allBoards = repository.findAll();
+        for (BoardsModel board : allBoards) {
+            if (!board.getUserId().equals(userId) && board.getAllowedUsers() != null
+                    && board.getAllowedUsers().contains(userId)) {
+                accessibleBoards.add(board);
+            }
+        }
+        return accessibleBoards;
     }
 
     public void createBoard(BoardsDTO board, MultipartFile image) {
@@ -128,6 +138,17 @@ public class BoardService {
         } else {
             throw new RuntimeException("Board not found with id: " + boardId);
         }
+    }
+
+    public List<BoardsModel> getAllPublicBoards() {
+        List<BoardsModel> allBoards = repository.findAll();
+        List<BoardsModel> publicBoards = new java.util.ArrayList<>();
+        for (BoardsModel board : allBoards) {
+            if (board.isPublic()) {
+                publicBoards.add(board);
+            }
+        }
+        return publicBoards;
     }
 
 }

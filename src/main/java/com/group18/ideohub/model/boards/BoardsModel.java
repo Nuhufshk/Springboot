@@ -1,5 +1,6 @@
 package com.group18.ideohub.model.boards;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.data.annotation.Id;
@@ -30,5 +31,6 @@ public class BoardsModel {
 
     private boolean isPublic;
     private List<BoardsComment> comments; // List of comments on the board
+    private ArrayList<String> allowedUsers;
 
 }

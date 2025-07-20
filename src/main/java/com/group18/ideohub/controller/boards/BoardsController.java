@@ -11,7 +11,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.group18.ideohub.dto.BoardsCommentDTO;
 import com.group18.ideohub.dto.BoardsDTO;
-import com.group18.ideohub.model.boards.BoardsComment;
 import com.group18.ideohub.response.RegisterResponse;
 import com.group18.ideohub.service.boards.BoardService;
 
@@ -115,6 +114,18 @@ public class BoardsController {
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             RegisterResponse<?> response = new RegisterResponse<>(false, "An error occurred: " + e.getMessage(), null);
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    @GetMapping("/public/boards")
+    public ResponseEntity<RegisterResponse<?>> getAllPublicBoards() {
+        RegisterResponse<?> response;
+        try {
+            response = new RegisterResponse<>(true, "Success", boardsService.getAllPublicBoards());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response = new RegisterResponse<>(false, "An error occurred: " + e.getMessage(), null);
             return ResponseEntity.badRequest().body(response);
         }
     }

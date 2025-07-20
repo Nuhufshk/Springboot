@@ -13,6 +13,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.group18.ideohub.dto.JwtDTO;
 import com.group18.ideohub.dto.LoginDTO;
 import com.group18.ideohub.model.Users;
 import com.group18.ideohub.model.profile.ProfileModel;
@@ -75,14 +76,20 @@ public class UserService {
 
     }
 
-    public String verify(LoginDTO user) {
+    public JwtDTO verify(LoginDTO user) {
         try {
             Authentication authentication = authManager
                     .authenticate(new UsernamePasswordAuthenticationToken(user.getEmail(), user.getPassword()));
             if (authentication.isAuthenticated()) {
-                return jwtService.generateToken(user.getEmail());
+                String token = jwtService.generateToken(user.getEmail());
+                Users dbUser = repo.findByEmail(user.getEmail());
+                return JwtDTO.builder()
+                        .jwt(token)
+                        .userId(dbUser.getId())
+                        .email(dbUser.getEmail())
+                        .build();
             } else {
-                return "fail";
+                return null;
             }
 
         } catch (AuthenticationException e) {

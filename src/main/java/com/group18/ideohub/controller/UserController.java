@@ -51,7 +51,7 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<RegisterResponse<JwtDTO>> login(@Valid @RequestBody LoginDTO user,
+    public ResponseEntity<RegisterResponse<?>> login(@Valid @RequestBody LoginDTO user,
             BindingResult bindingResult) {
 
         // Validate the user input
@@ -65,14 +65,12 @@ public class UserController {
             return ResponseEntity.badRequest().body(new RegisterResponse<>(false, "Email doesn't exists", null));
         }
 
-        String validity = service.verify(user);
-        if (validity == null || "fail".equals(validity)) {
+        JwtDTO validity = service.verify(user);
+        if (validity == null) {
             return ResponseEntity.badRequest()
-                    .body(new RegisterResponse<>(false, "Check your password", new JwtDTO(validity)));
+                    .body(new RegisterResponse<>(false, "Check your password", null));
         }
-        return ResponseEntity.ok(new RegisterResponse<>(true, "User authenticated successfully", new JwtDTO(validity)));// returns
-                                                                                                                        // a
-                                                                                                                        // jwt
+        return ResponseEntity.ok(new RegisterResponse<>(true, "User authenticated successfully", validity));
     }
 
     @PostMapping("/reset-password")
