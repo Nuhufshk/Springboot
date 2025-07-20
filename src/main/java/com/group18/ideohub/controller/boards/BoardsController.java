@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
 @CrossOrigin
@@ -123,6 +124,30 @@ public class BoardsController {
         RegisterResponse<?> response;
         try {
             response = new RegisterResponse<>(true, "Success", boardsService.getAllPublicBoards());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response = new RegisterResponse<>(false, "An error occurred: " + e.getMessage(), null);
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    @GetMapping("join/code/{code}")
+    public ResponseEntity<RegisterResponse<?>> JoinWithCode(@RequestParam String code) {
+        RegisterResponse<?> response;
+        try {
+            response = new RegisterResponse<>(true, "Success", boardsService.getBoardByJoinCode(code));
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response = new RegisterResponse<>(false, "An error occurred: " + e.getMessage(), null);
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    @GetMapping("join/link/{boardId}")
+    public ResponseEntity<RegisterResponse<?>> JoinWithLink(@RequestParam String boardId) {
+        RegisterResponse<?> response;
+        try {
+            response = new RegisterResponse<>(true, "Success", boardsService.getBoardByJoinWithLink(boardId));
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             response = new RegisterResponse<>(false, "An error occurred: " + e.getMessage(), null);

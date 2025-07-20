@@ -1,11 +1,14 @@
 package com.group18.ideohub.service.boards;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
+import com.group18.ideohub.dto.BoardsRespDTO;
 
 import com.group18.ideohub.dto.BoardsCommentDTO;
 import com.group18.ideohub.dto.BoardsDTO;
@@ -51,6 +54,12 @@ public class BoardService {
             imageUrl = cloudinaryService.uploadAndReturnUrl(image);
         }
 
+        // Generate a unique random boardNumber
+        int boardNumber;
+        do {
+            boardNumber = (int) (Math.random() * 1000000); // 6-digit random number
+        } while (repository.existsByBoardNumber(boardNumber));
+
         BoardsModel boardsModel = BoardsModel.builder()
                 .boardId(UUID.randomUUID().toString())
                 .UserId(userId)
@@ -62,6 +71,7 @@ public class BoardService {
                 .updatedAt(String.valueOf(System.currentTimeMillis()))
                 .imageUrl(imageUrl)
                 .comments(null)
+                .boardNumber(boardNumber)
                 .build();
         repository.save(boardsModel);
     }
@@ -140,15 +150,71 @@ public class BoardService {
         }
     }
 
-    public List<BoardsModel> getAllPublicBoards() {
+    public List<BoardsRespDTO> getAllPublicBoards() {
         List<BoardsModel> allBoards = repository.findAll();
-        List<BoardsModel> publicBoards = new java.util.ArrayList<>();
+        List<BoardsRespDTO> publicBoards = new java.util.ArrayList<>();
         for (BoardsModel board : allBoards) {
             if (board.isPublic()) {
-                publicBoards.add(board);
+                BoardsRespDTO dto = new BoardsRespDTO();
+                dto.setBoardId(board.getBoardId());
+                dto.setTitle(board.getTitle());
+                dto.setDescription(board.getDescription());
+                dto.setLayout(board.getLayout());
+                dto.setPublic(board.isPublic());
+                dto.setImageUrl(board.getImageUrl());
+                publicBoards.add(dto);
             }
         }
         return publicBoards;
+    }
+
+    public Object getBoardByJoinCode(String code) {
+        int boardNumber;
+        try {
+            boardNumber = Integer.parseInt(code);
+        } catch (NumberFormatException e) {
+            throw new RuntimeException("Invalid join code format.");
+        }
+
+        BoardsModel board = repository.findByBoardNumber(boardNumber);
+        if (board == null) {
+            throw new RuntimeException("Board not found with join code: " + code);
+        }
+
+        String userId = userService.getCurrentUser();
+        ArrayList<String> allowedUsers = board.getAllowedUsers();
+        if (allowedUsers == null) {
+            allowedUsers = new java.util.ArrayList<>();
+        }
+
+        if (!allowedUsers.contains(userId)) {
+            allowedUsers.add(userId);
+            board.setAllowedUsers(allowedUsers);
+            repository.save(board);
+        }
+
+        return board;
+    }
+
+    public Object getBoardByJoinWithLink(String boardId) {
+        BoardsModel board = repository.findById(boardId).orElse(null);
+        if (board == null) {
+            throw new RuntimeException("Board not found with id: " + boardId);
+        }
+
+        String userId = userService.getCurrentUser();
+        ArrayList<String> allowedUsers = board.getAllowedUsers();
+        if (allowedUsers == null) {
+            allowedUsers = new ArrayList<>();
+        }
+
+        if (!allowedUsers.contains(userId)) {
+            allowedUsers.add(userId);
+            board.setAllowedUsers(allowedUsers);
+            repository.save(board);
+        }
+
+        return board;
     }
 
 }

@@ -11,4 +11,8 @@ public interface BoardRepo extends MongoRepository<BoardsModel, String> {
 
     List<BoardsModel> findByTitleContaining(String title);
 
+    boolean existsByBoardNumber(int boardNumber);
+
+    BoardsModel findByBoardNumber(int boardNumber);
+
 }
