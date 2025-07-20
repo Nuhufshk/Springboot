@@ -1,158 +1,112 @@
 package com.group18.ideohub.controller.boards;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
-
 import com.group18.ideohub.dto.BoardsCommentDTO;
 import com.group18.ideohub.dto.BoardsDTO;
+import com.group18.ideohub.model.boards.BoardsModel;
 import com.group18.ideohub.response.RegisterResponse;
 import com.group18.ideohub.service.boards.BoardService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
+import java.util.List;
 
 @RestController
 @CrossOrigin
 @RequestMapping("/api/boards")
+@RequiredArgsConstructor
 public class BoardsController {
 
-    @Autowired
-    private BoardService boardsService;
+    private final BoardService boardsService;
 
+    @Operation(summary = "Get all boards for the current user")
     @GetMapping
-    public ResponseEntity<RegisterResponse<?>> getMethodName() {
-        RegisterResponse<?> response;
-        try {
-            response = new RegisterResponse<>(true, "Success", boardsService.getAllBoards());
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            response = new RegisterResponse<>(false, "An error occurred: " + e.getMessage(), null);
-            return ResponseEntity.badRequest().body(response);
-        }
+    public ResponseEntity<RegisterResponse<List<BoardsModel>>> getAllBoards() {
+        return ResponseEntity.ok(new RegisterResponse<>(true, "Success", boardsService.getAllBoards()));
     }
 
+    @Operation(summary = "Create a new board")
     @PostMapping
-    public ResponseEntity<RegisterResponse<?>> createBoards(@RequestPart("board") BoardsDTO board,
-            @RequestPart(value = "image", required = false) MultipartFile image) {
-        RegisterResponse<?> response;
-        try {
-            boardsService.createBoard(board, image);
-            response = new RegisterResponse<>(true, "Board created successfully", null);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            response = new RegisterResponse<>(false, "An error occurred: " + e.getMessage(), null);
-            return ResponseEntity.badRequest().body(response);
-        }
+    public ResponseEntity<RegisterResponse<BoardsModel>> createBoard(@RequestPart("board") BoardsDTO board, @RequestPart(value = "image", required = false) MultipartFile image) {
+        BoardsModel createdBoard = boardsService.createBoard(board, image);
+        return ResponseEntity.ok(new RegisterResponse<>(true, "Board created successfully", createdBoard));
     }
 
+    @Operation(summary = "Delete a board by ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Board deleted successfully"),
+            @ApiResponse(responseCode = "404", description = "Board not found") })
     @DeleteMapping("/{boardId}")
-    public ResponseEntity<RegisterResponse<?>> deleteBoard(@PathVariable String boardId) {
-        RegisterResponse<?> response;
-        try {
-            boardsService.deleteBoard(boardId);
-            response = new RegisterResponse<>(true, "Board deleted successfully", null);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            response = new RegisterResponse<>(false, "An error occurred: " + e.getMessage(), null);
-            return ResponseEntity.badRequest().body(response);
-        }
+    public ResponseEntity<RegisterResponse<Void>> deleteBoard(@PathVariable String boardId) {
+        boardsService.deleteBoard(boardId);
+        return ResponseEntity.ok(new RegisterResponse<>(true, "Board deleted successfully", null));
     }
 
+    @Operation(summary = "Update a board by ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Board updated successfully"),
+            @ApiResponse(responseCode = "404", description = "Board not found") })
     @PutMapping("/{id}")
-    public ResponseEntity<RegisterResponse<?>> updateBoard(@PathVariable String id, @RequestBody BoardsDTO board) {
-        RegisterResponse<?> response;
-        try {
-            boardsService.updateBoard(id, board);
-            response = new RegisterResponse<>(true, "Board updated successfully", null);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            response = new RegisterResponse<>(false, "An error occurred: " + e.getMessage(), null);
-            return ResponseEntity.badRequest().body(response);
-        }
+    public ResponseEntity<RegisterResponse<BoardsModel>> updateBoard(@PathVariable String id, @RequestBody BoardsDTO board) {
+        BoardsModel updatedBoard = boardsService.updateBoard(id, board);
+        return ResponseEntity.ok(new RegisterResponse<>(true, "Board updated successfully", updatedBoard));
     }
 
+    @Operation(summary = "Get a board by ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success"),
+            @ApiResponse(responseCode = "404", description = "Board not found") })
     @GetMapping("/{id}")
-    public ResponseEntity<RegisterResponse<?>> getBoardById(@PathVariable String id) {
-        RegisterResponse<?> response;
-        try {
-            response = new RegisterResponse<>(true, "Success", boardsService.getBoardById(id));
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            response = new RegisterResponse<>(false, "An error occurred: " + e.getMessage(), null);
-            return ResponseEntity.badRequest().body(response);
-        }
+    public ResponseEntity<RegisterResponse<BoardsModel>> getBoardById(@PathVariable String id) {
+        return ResponseEntity.ok(new RegisterResponse<>(true, "Success", boardsService.getBoardById(id)));
     }
 
+    @Operation(summary = "Add a comment to a board")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Comment added successfully"),
+            @ApiResponse(responseCode = "404", description = "Board not found") })
     @PostMapping("/comments/{id}")
-    public ResponseEntity<RegisterResponse<?>> postMethodName(@RequestBody BoardsCommentDTO entity,
-            @PathVariable String id, @RequestPart(value = "image", required = false) MultipartFile image) {
-        try {
-            boardsService.addCommentToBoard(entity, id, image);
-            RegisterResponse<?> response = new RegisterResponse<>(true, "Comment added successfully", null);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            RegisterResponse<?> response = new RegisterResponse<>(false, "An error occurred: " + e.getMessage(), null);
-            return ResponseEntity.badRequest().body(response);
-        }
+    public ResponseEntity<RegisterResponse<Void>> addComment(@RequestBody BoardsCommentDTO entity, @PathVariable String id, @RequestPart(value = "image", required = false) MultipartFile image) {
+        boardsService.addCommentToBoard(entity, id, image);
+        return ResponseEntity.ok(new RegisterResponse<>(true, "Comment added successfully", null));
     }
 
+    @Operation(summary = "Delete a comment from a board")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Comment deleted successfully"),
+            @ApiResponse(responseCode = "404", description = "Board or comment not found") })
     @DeleteMapping("/comments/{boardId}/{commentId}")
-    public ResponseEntity<RegisterResponse<?>> deleteComment(@PathVariable String boardId,
-            @PathVariable String commentId) {
-        try {
-            boardsService.deleteComment(commentId, boardId);
-            RegisterResponse<?> response = new RegisterResponse<>(true, "Comment deleted successfully", null);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            RegisterResponse<?> response = new RegisterResponse<>(false, "An error occurred: " + e.getMessage(), null);
-            return ResponseEntity.badRequest().body(response);
-        }
+    public ResponseEntity<RegisterResponse<Void>> deleteComment(@PathVariable String boardId, @PathVariable String commentId) {
+        boardsService.deleteComment(commentId, boardId);
+        return ResponseEntity.ok(new RegisterResponse<>(true, "Comment deleted successfully", null));
     }
 
+    @Operation(summary = "Get all public boards")
     @GetMapping("/public/boards")
     public ResponseEntity<RegisterResponse<?>> getAllPublicBoards() {
-        RegisterResponse<?> response;
-        try {
-            response = new RegisterResponse<>(true, "Success", boardsService.getAllPublicBoards());
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            response = new RegisterResponse<>(false, "An error occurred: " + e.getMessage(), null);
-            return ResponseEntity.badRequest().body(response);
-        }
+        return ResponseEntity.ok(new RegisterResponse<>(true, "Success", boardsService.getAllPublicBoards()));
     }
 
-    @GetMapping("join/code/{code}")
-    public ResponseEntity<RegisterResponse<?>> JoinWithCode(@RequestParam String code) {
-        RegisterResponse<?> response;
-        try {
-            response = new RegisterResponse<>(true, "Success", boardsService.getBoardByJoinCode(code));
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            response = new RegisterResponse<>(false, "An error occurred: " + e.getMessage(), null);
-            return ResponseEntity.badRequest().body(response);
-        }
+    @Operation(summary = "Join a board with a code")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success"),
+            @ApiResponse(responseCode = "404", description = "Board not found"),
+            @ApiResponse(responseCode = "400", description = "Invalid join code format") })
+    @GetMapping("/join/code/{code}")
+    public ResponseEntity<RegisterResponse<BoardsModel>> joinWithCode(@PathVariable String code) {
+        return ResponseEntity.ok(new RegisterResponse<>(true, "Success", boardsService.getBoardByJoinCode(code)));
     }
 
-    @GetMapping("join/link/{boardId}")
-    public ResponseEntity<RegisterResponse<?>> JoinWithLink(@RequestParam String boardId) {
-        RegisterResponse<?> response;
-        try {
-            response = new RegisterResponse<>(true, "Success", boardsService.getBoardByJoinWithLink(boardId));
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            response = new RegisterResponse<>(false, "An error occurred: " + e.getMessage(), null);
-            return ResponseEntity.badRequest().body(response);
-        }
+    @Operation(summary = "Join a board with a link")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success"),
+            @ApiResponse(responseCode = "404", description = "Board not found") })
+    @GetMapping("/join/link/{boardId}")
+    public ResponseEntity<RegisterResponse<BoardsModel>> joinWithLink(@PathVariable String boardId) {
+        return ResponseEntity.ok(new RegisterResponse<>(true, "Success", boardsService.getBoardByJoinWithLink(boardId)));
     }
-
 }

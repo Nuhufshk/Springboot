@@ -1,9 +1,14 @@
 package com.group18.ideohub.service;
 
-import java.time.LocalDateTime;
-import java.util.UUID;
-
-import org.springframework.beans.factory.annotation.Autowired;
+import com.group18.ideohub.dto.JwtDTO;
+import com.group18.ideohub.dto.LoginDTO;
+import com.group18.ideohub.exception.BadRequestException;
+import com.group18.ideohub.exception.ResourceNotFoundException;
+import com.group18.ideohub.model.Users;
+import com.group18.ideohub.model.profile.ProfileModel;
+import com.group18.ideohub.repo.UserRepo;
+import com.group18.ideohub.repo.profile.ProfileRepo;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -13,33 +18,24 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.group18.ideohub.dto.JwtDTO;
-import com.group18.ideohub.dto.LoginDTO;
-import com.group18.ideohub.model.Users;
-import com.group18.ideohub.model.profile.ProfileModel;
-import com.group18.ideohub.repo.UserRepo;
-import com.group18.ideohub.repo.profile.ProfileRepo;
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
-    @Autowired
-    private JWTService jwtService;
-
-    @Autowired
-    AuthenticationManager authManager;
-
-    @Autowired
-    private UserRepo repo;
-
-    @Autowired
-    private ProfileRepo profileRepo;
-
+    private final JWTService jwtService;
+    private final AuthenticationManager authManager;
+    private final UserRepo repo;
+    private final ProfileRepo profileRepo;
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
 
     @Transactional
     public Users register(LoginDTO user) {
-
+        if (existsByEmail(user.getEmail())) {
+            throw new BadRequestException("Email already exists");
+        }
         try {
             String uuid = UUID.randomUUID().toString();
             LocalDateTime currentTime = java.time.LocalDateTime.now();
@@ -57,12 +53,6 @@ public class UserService {
 
             profile.setId(UUID.randomUUID().toString());
             profile.setUserId(uuid);
-            profile.setUsername(null);
-            profile.setFirstName(null);
-            profile.setMiddleName(null);
-            profile.setLastName(null);
-            profile.setBio(null);
-            profile.setProfilePictureUrl(null);
 
             // save the user
             repo.save(DBuser);
@@ -71,12 +61,14 @@ public class UserService {
             return DBuser;
 
         } catch (Exception e) {
-            return null;
+            throw new BadRequestException("An internal error occurred");
         }
-
     }
 
     public JwtDTO verify(LoginDTO user) {
+        if (!existsByEmail(user.getEmail())) {
+            throw new ResourceNotFoundException("Email doesn't exist");
+        }
         try {
             Authentication authentication = authManager
                     .authenticate(new UsernamePasswordAuthenticationToken(user.getEmail(), user.getPassword()));
@@ -89,74 +81,52 @@ public class UserService {
                         .email(dbUser.getEmail())
                         .build();
             } else {
-                return null;
+                throw new BadRequestException("Check your password");
             }
-
         } catch (AuthenticationException e) {
-            return null; // Error occurred while checking user
+            throw new BadRequestException("Check your password");
         }
     }
 
     public boolean existsByEmail(String email) {
-        Users user = repo.findByEmail(email);
-        return user != null;
+        return repo.findByEmail(email) != null;
     }
 
     @Transactional
     public String resetPassword(LoginDTO user) {
-
-        try {
-            // Find the user by phone number
-            Users dbUser = repo.findByEmail(user.getEmail());
-            if (dbUser == null) {
-                return "fail";
-            }
-
-            String hashedPassword = encoder.encode(user.getPassword());
-
-            dbUser.setPassword(hashedPassword);
-            dbUser.setUpdatedAt(LocalDateTime.now());
-
-            repo.save(dbUser);
-
-            return "success";
-
-        } catch (Exception e) {
-            return "fail";
+        Users dbUser = repo.findByEmail(user.getEmail());
+        if (dbUser == null) {
+            throw new ResourceNotFoundException("Email doesn't exist");
         }
 
+        String hashedPassword = encoder.encode(user.getPassword());
+
+        dbUser.setPassword(hashedPassword);
+        dbUser.setUpdatedAt(LocalDateTime.now());
+
+        repo.save(dbUser);
+
+        return "success";
     }
 
     public String getCurrentUser() {
-        try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String userId = authentication.getName();
-
-            // get the user by phone number
-            Users user = repo.findByEmail(userId);
-
-            if (user == null) {
-                return null;
-            }
-
-            // return the user id for all searches
-            return user.getId();
-
-        } catch (Exception e) {
-            return null; // If an error occurs, return null
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new BadRequestException("User is not authenticated");
         }
-
+        String email = authentication.getName();
+        Users user = repo.findByEmail(email);
+        if (user == null) {
+            throw new ResourceNotFoundException("User not found");
+        }
+        return user.getId();
     }
 
-    // finds the user id to be used in the chat service
     public Users getUserById() {
-        Users user = repo.findById(getCurrentUser()).orElse(null);
-        if (user == null) {
-            return null;
-        }
-        return user;
+        return repo.findById(getCurrentUser()).orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
 
     public void removeTokenFromCache(String token) {
+        // This can be implemented with a caching mechanism like Redis if needed
     }
 }

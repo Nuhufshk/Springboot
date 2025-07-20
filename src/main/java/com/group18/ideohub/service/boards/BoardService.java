@@ -1,34 +1,30 @@
 package com.group18.ideohub.service.boards;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
-
-import com.group18.ideohub.dto.BoardsRespDTO;
-
 import com.group18.ideohub.dto.BoardsCommentDTO;
 import com.group18.ideohub.dto.BoardsDTO;
+import com.group18.ideohub.dto.BoardsRespDTO;
+import com.group18.ideohub.exception.BadRequestException;
+import com.group18.ideohub.exception.ResourceNotFoundException;
 import com.group18.ideohub.model.boards.BoardsComment;
 import com.group18.ideohub.model.boards.BoardsModel;
 import com.group18.ideohub.repo.boards.BoardRepo;
 import com.group18.ideohub.service.UserService;
 import com.group18.ideohub.service.cloudinary.CloudinaryService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class BoardService {
 
-    @Autowired
-    private BoardRepo repository;
-
-    @Autowired
-    private UserService userService;
-
-    @Autowired
-    private CloudinaryService cloudinaryService;
+    private final BoardRepo repository;
+    private final UserService userService;
+    private final CloudinaryService cloudinaryService;
 
     public List<BoardsModel> getAllBoards() {
         String userId = userService.getCurrentUser();
@@ -45,19 +41,17 @@ public class BoardService {
         return accessibleBoards;
     }
 
-    public void createBoard(BoardsDTO board, MultipartFile image) {
+    public BoardsModel createBoard(BoardsDTO board, MultipartFile image) {
         String userId = userService.getCurrentUser();
         String imageUrl = null;
 
-        // check if the image is not null and handle it accordingly
         if (image != null && !image.isEmpty()) {
             imageUrl = cloudinaryService.uploadAndReturnUrl(image);
         }
 
-        // Generate a unique random boardNumber
         int boardNumber;
         do {
-            boardNumber = (int) (Math.random() * 1000000); // 6-digit random number
+            boardNumber = (int) (Math.random() * 1000000);
         } while (repository.existsByBoardNumber(boardNumber));
 
         BoardsModel boardsModel = BoardsModel.builder()
@@ -70,84 +64,71 @@ public class BoardService {
                 .createdAt(String.valueOf(System.currentTimeMillis()))
                 .updatedAt(String.valueOf(System.currentTimeMillis()))
                 .imageUrl(imageUrl)
-                .comments(null)
                 .boardNumber(boardNumber)
                 .build();
-        repository.save(boardsModel);
+        return repository.save(boardsModel);
     }
 
-    public void updateBoard(String id, BoardsDTO board) {
-        BoardsModel boardsModel = repository.findById(id).orElse(null);
-        if (boardsModel != null) {
-            boardsModel.setTitle(board.getTitle());
-            boardsModel.setDescription(board.getDescription());
-            boardsModel.setLayout(board.getLayout());
-            boardsModel.setPublic(board.isPublic());
-            boardsModel.setUpdatedAt(String.valueOf(System.currentTimeMillis()));
-            repository.save(boardsModel);
-        }
+    public BoardsModel updateBoard(String id, BoardsDTO board) {
+        BoardsModel boardsModel = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Board not found with id: " + id));
+        boardsModel.setTitle(board.getTitle());
+        boardsModel.setDescription(board.getDescription());
+        boardsModel.setLayout(board.getLayout());
+        boardsModel.setPublic(board.isPublic());
+        boardsModel.setUpdatedAt(String.valueOf(System.currentTimeMillis()));
+        return repository.save(boardsModel);
     }
 
     public void deleteBoard(String id) {
+        if (!repository.existsById(id)) {
+            throw new ResourceNotFoundException("Board not found with id: " + id);
+        }
         repository.deleteById(id);
     }
 
-    public Object getBoardById(String id) {
-        BoardsModel boardsModel = repository.findById(id).orElse(null);
-        if (boardsModel != null) {
-            return boardsModel;
-        } else {
-            throw new RuntimeException("Board not found with id: " + id);
-        }
+    public BoardsModel getBoardById(String id) {
+        return repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Board not found with id: " + id));
     }
 
     public void addCommentToBoard(BoardsCommentDTO entity, String id, MultipartFile image) {
-        BoardsModel boardsModel = repository.findById(id).orElse(null);
+        BoardsModel boardsModel = getBoardById(id);
 
-        if (boardsModel != null) {
-            String imageUrl = null;
-            String link = null;
+        String imageUrl = null;
+        String link = null;
 
-            // Check if image is present and not empty
-            if (image != null && !image.isEmpty()) {
-                imageUrl = cloudinaryService.uploadAndReturnUrl(image);
-            } else if (entity.getLinkUrl() != null && !entity.getLinkUrl().isEmpty()) {
-                link = entity.getLinkUrl();
-            }
-
-            BoardsComment comment = BoardsComment.builder()
-                    .commentId(UUID.randomUUID().toString())
-                    .userId(userService.getCurrentUser())
-                    .commentText(entity.getCommentText())
-                    .imageUrl(imageUrl)
-                    .LinkUrl(link)
-                    .createdAt(String.valueOf(System.currentTimeMillis()))
-                    .updatedAt(String.valueOf(System.currentTimeMillis()))
-                    .build();
-
-            if (boardsModel.getComments() == null) {
-                boardsModel.setComments(new java.util.ArrayList<>());
-            }
-            boardsModel.getComments().add(comment);
-            repository.save(boardsModel);
+        if (image != null && !image.isEmpty()) {
+            imageUrl = cloudinaryService.uploadAndReturnUrl(image);
+        } else if (entity.getLinkUrl() != null && !entity.getLinkUrl().isEmpty()) {
+            link = entity.getLinkUrl();
         }
+
+        BoardsComment comment = BoardsComment.builder()
+                .commentId(UUID.randomUUID().toString())
+                .userId(userService.getCurrentUser())
+                .commentText(entity.getCommentText())
+                .imageUrl(imageUrl)
+                .LinkUrl(link)
+                .createdAt(String.valueOf(System.currentTimeMillis()))
+                .updatedAt(String.valueOf(System.currentTimeMillis()))
+                .build();
+
+        if (boardsModel.getComments() == null) {
+            boardsModel.setComments(new java.util.ArrayList<>());
+        }
+        boardsModel.getComments().add(comment);
+        repository.save(boardsModel);
     }
 
     public void deleteComment(String commentId, String boardId) {
-        BoardsModel boardsModel = repository.findById(boardId).orElse(null);
-        if (boardsModel != null) {
-            String currentUserId = userService.getCurrentUser();
-            boolean removed = boardsModel.getComments() != null &&
-                    boardsModel.getComments().removeIf(comment -> comment.getCommentId().equals(commentId) &&
-                            comment.getUserId().equals(currentUserId));
-            if (removed) {
-                repository.save(boardsModel);
-            } else {
-                throw new RuntimeException("Comment not found or user not authorized.");
-            }
-        } else {
-            throw new RuntimeException("Board not found with id: " + boardId);
+        BoardsModel boardsModel = getBoardById(boardId);
+        String currentUserId = userService.getCurrentUser();
+        boolean removed = boardsModel.getComments() != null &&
+                boardsModel.getComments().removeIf(comment -> comment.getCommentId().equals(commentId) &&
+                        comment.getUserId().equals(currentUserId));
+        if (!removed) {
+            throw new BadRequestException("Comment not found or user not authorized.");
         }
+        repository.save(boardsModel);
     }
 
     public List<BoardsRespDTO> getAllPublicBoards() {
@@ -168,17 +149,17 @@ public class BoardService {
         return publicBoards;
     }
 
-    public Object getBoardByJoinCode(String code) {
+    public BoardsModel getBoardByJoinCode(String code) {
         int boardNumber;
         try {
             boardNumber = Integer.parseInt(code);
         } catch (NumberFormatException e) {
-            throw new RuntimeException("Invalid join code format.");
+            throw new BadRequestException("Invalid join code format.");
         }
 
         BoardsModel board = repository.findByBoardNumber(boardNumber);
         if (board == null) {
-            throw new RuntimeException("Board not found with join code: " + code);
+            throw new ResourceNotFoundException("Board not found with join code: " + code);
         }
 
         String userId = userService.getCurrentUser();
@@ -196,12 +177,8 @@ public class BoardService {
         return board;
     }
 
-    public Object getBoardByJoinWithLink(String boardId) {
-        BoardsModel board = repository.findById(boardId).orElse(null);
-        if (board == null) {
-            throw new RuntimeException("Board not found with id: " + boardId);
-        }
-
+    public BoardsModel getBoardByJoinWithLink(String boardId) {
+        BoardsModel board = getBoardById(boardId);
         String userId = userService.getCurrentUser();
         ArrayList<String> allowedUsers = board.getAllowedUsers();
         if (allowedUsers == null) {
@@ -216,5 +193,4 @@ public class BoardService {
 
         return board;
     }
-
 }

@@ -1,56 +1,56 @@
 package com.group18.ideohub.service.profile;
 
-import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
-
 import com.group18.ideohub.dto.ProfileDTO;
 import com.group18.ideohub.dto.ProfileGetDTO;
+import com.group18.ideohub.exception.ResourceNotFoundException;
 import com.group18.ideohub.model.Users;
 import com.group18.ideohub.model.profile.ProfileModel;
 import com.group18.ideohub.repo.UserRepo;
 import com.group18.ideohub.repo.profile.ProfileRepo;
 import com.group18.ideohub.service.UserService;
 import com.group18.ideohub.service.cloudinary.CloudinaryService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
+@RequiredArgsConstructor
 public class ProfileService {
 
-    private ProfileRepo profileRepo;
-
-    private UserService userService;
-
-    private UserRepo userRepo;
-
-    private CloudinaryService cloudinaryservice;
+    private final ProfileRepo profileRepo;
+    private final UserService userService;
+    private final UserRepo userRepo;
+    private final CloudinaryService cloudinaryservice;
 
     public ProfileDTO getProfile() {
-        ProfileModel profileModel = profileRepo.findByUserId(userService.getCurrentUser());
-
-        Users user = userRepo.findByUserId(userService.getCurrentUser());
-
-        if (profileModel != null) {
-            ProfileDTO profileDTO = new ProfileDTO();
-
-            profileDTO.setUserId(profileModel.getUserId());
-            profileDTO.setUsername(profileModel.getUsername());
-            profileDTO.setFirstName(profileModel.getFirstName());
-            profileDTO.setMiddleName(profileModel.getMiddleName());
-            profileDTO.setLastName(profileModel.getLastName());
-            profileDTO.setBio(profileModel.getBio());
-            profileDTO.setEmail(user.getEmail() != null ? user.getEmail() : "");
-            profileDTO.setProfilePictureUrl(profileModel.getProfilePictureUrl());
-
-            return profileDTO;
+        String currentUserId = userService.getCurrentUser();
+        ProfileModel profileModel = profileRepo.findByUserId(currentUserId);
+        if (profileModel == null) {
+            throw new ResourceNotFoundException("Profile not found for the current user");
         }
-        return null;
+
+        Users user = userRepo.findById(currentUserId).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        ProfileDTO profileDTO = new ProfileDTO();
+        profileDTO.setUserId(profileModel.getUserId());
+        profileDTO.setUsername(profileModel.getUsername());
+        profileDTO.setFirstName(profileModel.getFirstName());
+        profileDTO.setMiddleName(profileModel.getMiddleName());
+        profileDTO.setLastName(profileModel.getLastName());
+        profileDTO.setBio(profileModel.getBio());
+        profileDTO.setEmail(user.getEmail());
+        profileDTO.setProfilePictureUrl(profileModel.getProfilePictureUrl());
+
+        return profileDTO;
     }
 
     public String editProfile(ProfileGetDTO profileGetDTO, MultipartFile profilePicture) {
-        ProfileModel profileModel = profileRepo.findByUserId(userService.getCurrentUser());
+        String currentUserId = userService.getCurrentUser();
+        ProfileModel profileModel = profileRepo.findByUserId(currentUserId);
 
         if (profileModel == null) {
             profileModel = new ProfileModel();
-            profileModel.setUserId(userService.getCurrentUser());
+            profileModel.setUserId(currentUserId);
         }
 
         if (profileGetDTO.getUsername() != null && !profileGetDTO.getUsername().isEmpty()) {
@@ -69,7 +69,6 @@ public class ProfileService {
             profileModel.setBio(profileGetDTO.getBio());
         }
 
-        // Handle profile picture upload logic here
         if (profilePicture != null && !profilePicture.isEmpty()) {
             String pictureUrl = cloudinaryservice.uploadAndReturnUrl(profilePicture);
             profileModel.setProfilePictureUrl(pictureUrl);
@@ -79,5 +78,4 @@ public class ProfileService {
 
         return "Profile updated successfully";
     }
-
 }
