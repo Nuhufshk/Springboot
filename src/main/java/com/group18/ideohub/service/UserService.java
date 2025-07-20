@@ -15,7 +15,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.group18.ideohub.dto.LoginDTO;
 import com.group18.ideohub.model.Users;
+import com.group18.ideohub.model.profile.ProfileModel;
 import com.group18.ideohub.repo.UserRepo;
+import com.group18.ideohub.repo.profile.ProfileRepo;
 
 @Service
 public class UserService {
@@ -29,13 +31,15 @@ public class UserService {
     @Autowired
     private UserRepo repo;
 
+    @Autowired
+    private ProfileRepo profileRepo;
+
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
 
     @Transactional
     public Users register(LoginDTO user) {
 
         try {
-            // generate an id for each user
             String uuid = UUID.randomUUID().toString();
             LocalDateTime currentTime = java.time.LocalDateTime.now();
 
@@ -47,10 +51,22 @@ public class UserService {
             DBuser.setId(uuid);
             DBuser.setCreatedAt(currentTime); // set the creation time
 
+            // create new profile for the created user
+            ProfileModel profile = new ProfileModel();
+
+            profile.setId(UUID.randomUUID().toString());
+            profile.setUserId(uuid);
+            profile.setUsername(null);
+            profile.setFirstName(null);
+            profile.setMiddleName(null);
+            profile.setLastName(null);
+            profile.setBio(null);
+            profile.setProfilePictureUrl(null);
+
             // save the user
             repo.save(DBuser);
+            profileRepo.save(profile);
 
-            // return the user after all is saved
             return DBuser;
 
         } catch (Exception e) {
