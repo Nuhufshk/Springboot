@@ -45,7 +45,7 @@ public class UserService {
 
             DBuser.setEmail(user.getEmail());
             DBuser.setPassword(encoder.encode(user.getPassword())); // encrypt the password
-            DBuser.setId(uuid);
+            DBuser.setUserId(uuid);
             DBuser.setCreatedAt(currentTime); // set the creation time
 
             // create new profile for the created user
@@ -77,7 +77,7 @@ public class UserService {
                 Users dbUser = repo.findByEmail(user.getEmail());
                 return JwtDTO.builder()
                         .jwt(token)
-                        .userId(dbUser.getId())
+                        .userId(dbUser.getUserId())
                         .email(dbUser.getEmail())
                         .build();
             } else {
@@ -119,7 +119,7 @@ public class UserService {
         if (user == null) {
             throw new ResourceNotFoundException("User not found");
         }
-        return user.getId();
+        return user.getUserId();
     }
 
     public Users getUserById() {

@@ -1,4 +1,5 @@
 package com.group18.ideohub.model;
+
 import java.time.LocalDateTime;
 
 import org.springframework.data.annotation.Id;
@@ -21,7 +22,7 @@ import lombok.NoArgsConstructor;
 public class Users {
 
     @Id
-    private String id; 
+    private String userId;
 
     @NotNull(message = "Email must not be null")
     @NotEmpty(message = "Email must not be empty")
@@ -35,5 +36,5 @@ public class Users {
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    
+
 }
