@@ -106,7 +106,7 @@ public class BoardService {
 
         BoardsComment comment = BoardsComment.builder()
                 .commentId(UUID.randomUUID().toString())
-                .userId(userService.getCurrentUser())
+                .userCommentId(userService.getCurrentUser())
                 .commentText(entity.getCommentText())
                 .imageUrl(imageUrl)
                 .LinkUrl(link)
