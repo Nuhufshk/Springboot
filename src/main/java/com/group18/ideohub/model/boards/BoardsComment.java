@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 public class BoardsComment {
     private String commentId;
     private String boardId;
-    private String userId;
+    private String userCommentId;
 
     private String commentText;// Text of the comment or caption
     private String imageUrl;

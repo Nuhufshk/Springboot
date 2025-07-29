@@ -70,7 +70,8 @@ public class BoardService {
     }
 
     public BoardsModel updateBoard(String id, BoardsDTO board) {
-        BoardsModel boardsModel = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Board not found with id: " + id));
+        BoardsModel boardsModel = repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Board not found with id: " + id));
         boardsModel.setTitle(board.getTitle());
         boardsModel.setDescription(board.getDescription());
         boardsModel.setLayout(board.getLayout());
@@ -87,7 +88,8 @@ public class BoardService {
     }
 
     public BoardsModel getBoardById(String id) {
-        return repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Board not found with id: " + id));
+        return repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Board not found with id: " + id));
     }
 
     public void addCommentToBoard(BoardsCommentDTO entity, String id, MultipartFile image) {
@@ -124,7 +126,7 @@ public class BoardService {
         String currentUserId = userService.getCurrentUser();
         boolean removed = boardsModel.getComments() != null &&
                 boardsModel.getComments().removeIf(comment -> comment.getCommentId().equals(commentId) &&
-                        comment.getUserId().equals(currentUserId));
+                        comment.getUserCommentId().equals(currentUserId));
         if (!removed) {
             throw new BadRequestException("Comment not found or user not authorized.");
         }

@@ -19,7 +19,7 @@ import lombok.NoArgsConstructor;
 public class BoardsModel {
     @Id
     private String boardId;
-    private String userId;
+    private String UserId;
     private int boardNumber;
 
     private String Title;
