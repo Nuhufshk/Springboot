@@ -1,5 +1,8 @@
 package com.group18.ideohub.controller.boards;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.group18.ideohub.dto.BoardsCommentDTO;
 import com.group18.ideohub.dto.BoardsDTO;
 import com.group18.ideohub.model.boards.BoardsModel;
@@ -47,8 +50,8 @@ public class BoardsController {
     @Operation(summary = "Create a new board")
     @PostMapping("/2nd-edition")
     public ResponseEntity<RegisterResponse<BoardsModel>> createBoards(@RequestPart("boards") String board,
-            @RequestPart("image") MultipartFile image) {
-        BoardsModel newBoard = new ObjectMapper().readValue(board, BoardsDTO.class);
+            @RequestPart("image") MultipartFile image) throws JsonMappingException, JsonProcessingException {
+        BoardsDTO newBoard = new ObjectMapper().readValue(board, BoardsDTO.class);
         BoardsModel createdBoard = boardsService.createBoardDetails2n(newBoard, image);
         return ResponseEntity.ok(new RegisterResponse<>(true, "Board created successfully", createdBoard));
     }
