@@ -18,25 +18,33 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 public class ProfileController {
 
-    private final ProfileService profileService;
+        private final ProfileService profileService;
 
-    @Operation(summary = "Get the current user's profile")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Profile retrieved successfully"),
-            @ApiResponse(responseCode = "404", description = "Profile not found") })
-    @GetMapping
-    public ResponseEntity<RegisterResponse<ProfileDTO>> getProfile() {
-        return ResponseEntity.ok(
-                new RegisterResponse<>(true, "Profile retrieved successfully", profileService.getProfile()));
-    }
+        @Operation(summary = "Get the current user's profile")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Profile retrieved successfully"),
+                        @ApiResponse(responseCode = "404", description = "Profile not found") })
+        @GetMapping
+        public ResponseEntity<RegisterResponse<ProfileDTO>> getProfile() {
+                return ResponseEntity.ok(
+                                new RegisterResponse<>(true, "Profile retrieved successfully",
+                                                profileService.getProfile()));
+        }
 
-    @Operation(summary = "Edit the current user's profile")
-    @PostMapping
-    public ResponseEntity<RegisterResponse<String>> editProfile(
-            @RequestPart("profile") ProfileGetDTO profileGetDTO,
-            @RequestPart(value = "profilePicture", required = false) MultipartFile profilePicture) {
-        return ResponseEntity.ok(
-                new RegisterResponse<>(true, "Profile updated successfully",
-                        profileService.editProfile(profileGetDTO, profilePicture)));
-    }
+        @Operation(summary = "Edit the current user's profile")
+        @PostMapping
+        public ResponseEntity<RegisterResponse<String>> editProfileDetails(
+                        @RequestBody ProfileGetDTO profileGetDTO) {
+                return ResponseEntity.ok(
+                                new RegisterResponse<>(true, "Profile updated successfully",
+                                                profileService.editProfile(profileGetDTO)));
+        }
+
+        @Operation(summary = "Edit the current user's profile")
+        @PostMapping
+        public ResponseEntity<RegisterResponse<String>> editProfilePic(MultipartFile profilePicture) {
+                return ResponseEntity.ok(
+                                new RegisterResponse<>(true, "Profile updated successfully",
+                                                profileService.editProfilePic(profilePicture)));
+        }
 }

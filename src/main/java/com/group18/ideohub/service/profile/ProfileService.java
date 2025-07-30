@@ -29,7 +29,8 @@ public class ProfileService {
             throw new ResourceNotFoundException("Profile not found for the current user");
         }
 
-        Users user = userRepo.findById(currentUserId).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        Users user = userRepo.findById(currentUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         ProfileDTO profileDTO = new ProfileDTO();
         profileDTO.setUserId(profileModel.getUserId());
@@ -44,7 +45,7 @@ public class ProfileService {
         return profileDTO;
     }
 
-    public String editProfile(ProfileGetDTO profileGetDTO, MultipartFile profilePicture) {
+    public String editProfile(ProfileGetDTO profileGetDTO) {
         String currentUserId = userService.getCurrentUser();
         ProfileModel profileModel = profileRepo.findByUserId(currentUserId);
 
@@ -67,6 +68,25 @@ public class ProfileService {
         }
         if (profileGetDTO.getBio() != null && !profileGetDTO.getBio().isEmpty()) {
             profileModel.setBio(profileGetDTO.getBio());
+        }
+
+        // if (profilePicture != null && !profilePicture.isEmpty()) {
+        // String pictureUrl = cloudinaryservice.uploadAndReturnUrl(profilePicture);
+        // profileModel.setProfilePictureUrl(pictureUrl);
+        // }
+
+        profileRepo.save(profileModel);
+
+        return "Profile updated successfully";
+    }
+
+    public String editProfilePic(MultipartFile profilePicture) {
+        String currentUserId = userService.getCurrentUser();
+        ProfileModel profileModel = profileRepo.findByUserId(currentUserId);
+
+        if (profileModel == null) {
+            profileModel = new ProfileModel();
+            profileModel.setUserId(currentUserId);
         }
 
         if (profilePicture != null && !profilePicture.isEmpty()) {
