@@ -32,7 +32,7 @@ public class ProfileController {
         }
 
         @Operation(summary = "Edit the current user's profile")
-        @PostMapping
+        @PostMapping("/details")
         public ResponseEntity<RegisterResponse<String>> editProfileDetails(
                         @RequestBody ProfileGetDTO profileGetDTO) {
                 return ResponseEntity.ok(
@@ -41,7 +41,7 @@ public class ProfileController {
         }
 
         @Operation(summary = "Edit the current user's profile")
-        @PostMapping
+        @PostMapping("/pic")
         public ResponseEntity<RegisterResponse<String>> editProfilePic(MultipartFile profilePicture) {
                 return ResponseEntity.ok(
                                 new RegisterResponse<>(true, "Profile updated successfully",

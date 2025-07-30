@@ -15,4 +15,6 @@ public interface BoardRepo extends MongoRepository<BoardsModel, String> {
 
     BoardsModel findByBoardNumber(int boardNumber);
 
+    BoardsModel findByTitle(String title);
+
 }

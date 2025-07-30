@@ -31,8 +31,16 @@ public class BoardsController {
 
     @Operation(summary = "Create a new board")
     @PostMapping
-    public ResponseEntity<RegisterResponse<BoardsModel>> createBoard(@RequestPart("board") BoardsDTO board, @RequestPart(value = "image", required = false) MultipartFile image) {
-        BoardsModel createdBoard = boardsService.createBoard(board, image);
+    public ResponseEntity<RegisterResponse<BoardsModel>> createBoard(
+            MultipartFile image) {
+        BoardsModel createdBoard = boardsService.createBoard(image);
+        return ResponseEntity.ok(new RegisterResponse<>(true, "Board created successfully", createdBoard));
+    }
+
+    @Operation(summary = "Create a new board")
+    @PostMapping("/details")
+    public ResponseEntity<RegisterResponse<BoardsModel>> createBoardDetails(@RequestBody BoardsDTO board) {
+        BoardsModel createdBoard = boardsService.createBoardDetails(board);
         return ResponseEntity.ok(new RegisterResponse<>(true, "Board created successfully", createdBoard));
     }
 
@@ -51,7 +59,8 @@ public class BoardsController {
             @ApiResponse(responseCode = "200", description = "Board updated successfully"),
             @ApiResponse(responseCode = "404", description = "Board not found") })
     @PutMapping("/{id}")
-    public ResponseEntity<RegisterResponse<BoardsModel>> updateBoard(@PathVariable String id, @RequestBody BoardsDTO board) {
+    public ResponseEntity<RegisterResponse<BoardsModel>> updateBoard(@PathVariable String id,
+            @RequestBody BoardsDTO board) {
         BoardsModel updatedBoard = boardsService.updateBoard(id, board);
         return ResponseEntity.ok(new RegisterResponse<>(true, "Board updated successfully", updatedBoard));
     }
@@ -70,7 +79,8 @@ public class BoardsController {
             @ApiResponse(responseCode = "200", description = "Comment added successfully"),
             @ApiResponse(responseCode = "404", description = "Board not found") })
     @PostMapping("/comments/{id}")
-    public ResponseEntity<RegisterResponse<Void>> addComment(@RequestBody BoardsCommentDTO entity, @PathVariable String id, @RequestPart(value = "image", required = false) MultipartFile image) {
+    public ResponseEntity<RegisterResponse<Void>> addComment(@RequestBody BoardsCommentDTO entity,
+            @PathVariable String id, @RequestPart(value = "image", required = false) MultipartFile image) {
         boardsService.addCommentToBoard(entity, id, image);
         return ResponseEntity.ok(new RegisterResponse<>(true, "Comment added successfully", null));
     }
@@ -80,7 +90,8 @@ public class BoardsController {
             @ApiResponse(responseCode = "200", description = "Comment deleted successfully"),
             @ApiResponse(responseCode = "404", description = "Board or comment not found") })
     @DeleteMapping("/comments/{boardId}/{commentId}")
-    public ResponseEntity<RegisterResponse<Void>> deleteComment(@PathVariable String boardId, @PathVariable String commentId) {
+    public ResponseEntity<RegisterResponse<Void>> deleteComment(@PathVariable String boardId,
+            @PathVariable String commentId) {
         boardsService.deleteComment(commentId, boardId);
         return ResponseEntity.ok(new RegisterResponse<>(true, "Comment deleted successfully", null));
     }
@@ -107,6 +118,7 @@ public class BoardsController {
             @ApiResponse(responseCode = "404", description = "Board not found") })
     @GetMapping("/join/link/{boardId}")
     public ResponseEntity<RegisterResponse<BoardsModel>> joinWithLink(@PathVariable String boardId) {
-        return ResponseEntity.ok(new RegisterResponse<>(true, "Success", boardsService.getBoardByJoinWithLink(boardId)));
+        return ResponseEntity
+                .ok(new RegisterResponse<>(true, "Success", boardsService.getBoardByJoinWithLink(boardId)));
     }
 }

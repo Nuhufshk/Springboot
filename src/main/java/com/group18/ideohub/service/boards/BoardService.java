@@ -41,13 +41,26 @@ public class BoardService {
         return accessibleBoards;
     }
 
-    public BoardsModel createBoard(BoardsDTO board, MultipartFile image) {
+    public BoardsModel createBoard(MultipartFile image) {
         String userId = userService.getCurrentUser();
         String imageUrl = null;
 
         if (image != null && !image.isEmpty()) {
             imageUrl = cloudinaryService.uploadAndReturnUrl(image);
         }
+
+        List<BoardsModel> boards = repository.findByUserId(userId);
+
+        BoardsModel latestBoard = boards.get(0);
+
+        latestBoard.setImageUrl(imageUrl);
+
+        return repository.save(latestBoard);
+    }
+
+    public BoardsModel createBoardDetails(BoardsDTO board) {
+        String userId = userService.getCurrentUser();
+        String imageUrl = null;
 
         int boardNumber;
         do {
