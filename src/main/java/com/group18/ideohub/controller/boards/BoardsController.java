@@ -46,9 +46,10 @@ public class BoardsController {
 
     @Operation(summary = "Create a new board")
     @PostMapping("/2nd-edition")
-    public ResponseEntity<RegisterResponse<BoardsModel>> createBoards(@RequestPart("boards") BoardsDTO board,
+    public ResponseEntity<RegisterResponse<BoardsModel>> createBoards(@RequestPart("boards") String board,
             @RequestPart("image") MultipartFile image) {
-        BoardsModel createdBoard = boardsService.createBoardDetails2n(board, image);
+        BoardsModel newBoard = new ObjectMapper().readValue(board, BoardsDTO.class);
+        BoardsModel createdBoard = boardsService.createBoardDetails2n(newBoard, image);
         return ResponseEntity.ok(new RegisterResponse<>(true, "Board created successfully", createdBoard));
     }
 
