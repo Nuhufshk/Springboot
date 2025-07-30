@@ -25,6 +25,7 @@ public class ChatService {
                 .content();
     }
 
+    @Transactional
     public ChatModel processChatMessage(String userPrompt) {
         String userId = userService.getCurrentUser();
         saveChatMessage(userId, userPrompt, "user");
@@ -35,7 +36,6 @@ public class ChatService {
         return chatMessage;
     }
 
-    @Transactional
     public ChatModel saveChatMessage(String userId, String userPrompt, String sender) {
         ChatModel chatMessage = new ChatModel();
         chatMessage.setId(java.util.UUID.randomUUID().toString());
