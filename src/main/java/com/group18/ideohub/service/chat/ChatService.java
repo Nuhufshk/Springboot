@@ -25,18 +25,18 @@ public class ChatService {
                 .content();
     }
 
-    public String processChatMessage(String userPrompt) {
+    public ChatModel processChatMessage(String userPrompt) {
         String userId = userService.getCurrentUser();
         saveChatMessage(userId, userPrompt, "user");
 
         String aiResponse = getAiResponse(userPrompt);
-        saveChatMessage(userId, aiResponse, "ai");
+        ChatModel chatMessage = saveChatMessage(userId, aiResponse, "ai");
 
-        return aiResponse;
+        return chatMessage;
     }
 
     @Transactional
-    public void saveChatMessage(String userId, String userPrompt, String sender) {
+    public ChatModel saveChatMessage(String userId, String userPrompt, String sender) {
         ChatModel chatMessage = new ChatModel();
         chatMessage.setId(java.util.UUID.randomUUID().toString());
         chatMessage.setUserId(userId);
@@ -44,6 +44,7 @@ public class ChatService {
         chatMessage.setSender(sender);
         chatMessage.setTime(java.time.LocalDateTime.now());
         chatRepository.save(chatMessage);
+        return chatMessage;
     }
 
     public List<ChatModel> getAllMessages() {
