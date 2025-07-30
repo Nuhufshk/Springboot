@@ -32,7 +32,7 @@ public class BoardsController {
     @Operation(summary = "Create a new board")
     @PostMapping
     public ResponseEntity<RegisterResponse<BoardsModel>> createBoard(
-            MultipartFile image) {
+            @RequestBody MultipartFile image) {
         BoardsModel createdBoard = boardsService.createBoard(image);
         return ResponseEntity.ok(new RegisterResponse<>(true, "Board created successfully", createdBoard));
     }
