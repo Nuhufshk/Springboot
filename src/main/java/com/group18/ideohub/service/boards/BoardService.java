@@ -56,7 +56,7 @@ public class BoardService {
 
         BoardsModel boardsModel = BoardsModel.builder()
                 .boardId(UUID.randomUUID().toString())
-                .UserId(userId)
+                .userId(userId)
                 .Title(board.getTitle())
                 .description(board.getDescription())
                 .layout(board.getLayout())
