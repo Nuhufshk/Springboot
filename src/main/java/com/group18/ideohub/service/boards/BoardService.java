@@ -58,6 +58,34 @@ public class BoardService {
         return repository.save(latestBoard);
     }
 
+    public BoardsModel createBoardDetails2n(BoardsDTO board, MultipartFile image) {
+        String userId = userService.getCurrentUser();
+        String imageUrl = null;
+
+        if (image != null && !image.isEmpty()) {
+            imageUrl = cloudinaryService.uploadAndReturnUrl(image);
+        }
+
+        int boardNumber;
+        do {
+            boardNumber = (int) (Math.random() * 1000000);
+        } while (repository.existsByBoardNumber(boardNumber));
+
+        BoardsModel boardsModel = BoardsModel.builder()
+                .boardId(UUID.randomUUID().toString())
+                .userId(userId)
+                .Title(board.getTitle())
+                .description(board.getDescription())
+                .layout(board.getLayout())
+                .isPublic(board.isPublic())
+                .createdAt(String.valueOf(System.currentTimeMillis()))
+                .updatedAt(String.valueOf(System.currentTimeMillis()))
+                .imageUrl(imageUrl)
+                .boardNumber(boardNumber)
+                .build();
+        return repository.save(boardsModel);
+    }
+
     public BoardsModel createBoardDetails(BoardsDTO board) {
         String userId = userService.getCurrentUser();
         String imageUrl = null;

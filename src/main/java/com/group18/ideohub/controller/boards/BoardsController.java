@@ -44,6 +44,14 @@ public class BoardsController {
         return ResponseEntity.ok(new RegisterResponse<>(true, "Board created successfully", createdBoard));
     }
 
+    @Operation(summary = "Create a new board")
+    @PostMapping("/2nd-edition")
+    public ResponseEntity<RegisterResponse<BoardsModel>> createBoards(@RequestPart("boards") BoardsDTO board,
+            @RequestPart("image") MultipartFile image) {
+        BoardsModel createdBoard = boardsService.createBoardDetails2n(board, image);
+        return ResponseEntity.ok(new RegisterResponse<>(true, "Board created successfully", createdBoard));
+    }
+
     @Operation(summary = "Delete a board by ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Board deleted successfully"),
